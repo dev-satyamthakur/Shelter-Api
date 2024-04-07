@@ -4,19 +4,22 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const User = require("./models/User.js");
-const app = express();
+const Place = require("./models/Place.js");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const imageDownloader = require("image-downloader");
 const multer = require("multer");
 const fs = require("fs");
+const { title } = require("process");
 
 const bcryptSecretSalt = bcrypt.genSaltSync(10);
 const jwtSecret = "mysecret";
 
+const app = express();
+
 app.use(express.json());
 app.use(cookieParser());
-app.use('/uploads', express.static(__dirname + '/uploads'));
+app.use("/uploads", express.static(__dirname + "/uploads"));
 app.use(
   cors({
     credentials: true,
@@ -90,7 +93,7 @@ app.post("/logout", (req, res) => {
 
 app.post("/upload-by-link", async (req, res) => {
   const { link } = req.body;
-  const newName = 'photo' + Date.now() + '.jpg';
+  const newName = "photo" + Date.now() + ".jpg";
 
   await imageDownloader.image({
     url: link,
@@ -100,20 +103,52 @@ app.post("/upload-by-link", async (req, res) => {
   res.json(newName);
 });
 
-const photosMiddleware = multer({ dest: 'uploads/' });
+const photosMiddleware = multer({ dest: "uploads/" });
 app.post("/upload", photosMiddleware.array("photos", 100), (req, res) => {
-  const uploadedFiles = []
+  const uploadedFiles = [];
   for (let i = 0; i < req.files.length; i++) {
     const { path, originalname } = req.files[i];
-    const parts = originalname.split('.');
+    const parts = originalname.split(".");
     const extension = parts[parts.length - 1];
-    let newPath = path + '.' + extension;
+    let newPath = path + "." + extension;
     fs.renameSync(path, newPath);
-    uploadedFiles.push(newPath.replace('uploads\\', ''));
+    uploadedFiles.push(newPath.replace("uploads\\", ""));
   }
   res.json(uploadedFiles);
 });
 
+app.post("/places", async (req, res) => {
+  const { token } = req.cookies;
+  const {
+    title,
+    address,
+    photos,
+    description,
+    perks,
+    extraInfo,
+    checkIn,
+    checkOut,
+    maxGuests,
+  } = req.body;
+
+  jwt.verify(token, jwtSecret, {}, async (err, userData) => {
+    if (err) throw err;
+    const placeDoc = await Place.create({
+      owner: userData.id,
+      title,
+      address,
+      photos,
+      description,
+      perks,
+      extraInfo,
+      checkIn,
+      checkOut,
+      maxGuests,
+    });
+
+    res.json(placeDoc);
+  });
+});
 
 const PORT = process.env.PORT || 4000; // Use PORT from environment variables or default to 4000
 app.listen(PORT, () => {
