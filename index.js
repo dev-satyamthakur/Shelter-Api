@@ -129,6 +129,7 @@ app.post("/places", async (req, res) => {
     checkIn,
     checkOut,
     maxGuests,
+    price,
   } = req.body;
 
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
@@ -144,6 +145,7 @@ app.post("/places", async (req, res) => {
       checkIn,
       checkOut,
       maxGuests,
+      price,
     });
 
     res.json(placeDoc);
@@ -163,6 +165,7 @@ app.put("/places", async (req, res) => {
     checkIn,
     checkOut,
     maxGuests,
+    price,
   } = req.body;
 
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
@@ -179,6 +182,7 @@ app.put("/places", async (req, res) => {
         checkIn,
         checkOut,
         maxGuests,
+        price,
       });
       await placeDoc.save();
       res.json("ok");
@@ -186,7 +190,7 @@ app.put("/places", async (req, res) => {
   });
 });
 
-app.get("/places", async (req, res) => {
+app.get("/user-places", async (req, res) => {
   const { token } = req.cookies;
   jwt.verify(token, jwtSecret, {}, async (err, userData) => {
     const { id } = userData;
@@ -197,6 +201,10 @@ app.get("/places", async (req, res) => {
 app.get("/places/:id", async (req, res) => {
   const { id } = req.params;
   res.json(await Place.findById(id));
+});
+
+app.get("/places", async (req, res) => {
+  res.json(await Place.find());
 });
 
 const PORT = process.env.PORT || 4000; // Use PORT from environment variables or default to 4000
