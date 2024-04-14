@@ -40,7 +40,7 @@ function getUserDataFromReq(req) {
 mongoose.connect(process.env.MONGO_URL);
 
 app.get("/test", (req, res) => {
-  res.html("<h1>Welcome to Shelter API</h1>");
+  res.send("<h1>Welcome to Shelter API</h1>");
 });
 
 app.post("/register", async (req, res) => {
